@@ -39,10 +39,12 @@ The bundled client supports:
 
 ### `paper-citation-resolver`
 
-Find citation metadata from a paper title, DOI, arXiv URL, arXiv ID, or preprint
-link. The skill is designed for the common research-writing problem where an AI
-paper is first cited as an arXiv preprint, but a peer-reviewed conference or
-journal version later becomes available and should be cited instead.
+Find citation metadata from a verified paper title, DOI, arXiv URL, arXiv ID,
+or preprint link. When the title is fuzzy, first recover the canonical title
+with `paper-search` or `ai-search`, then run the citation resolver. The skill
+is designed for the common research-writing problem where an AI paper is first
+cited as an arXiv preprint, but a peer-reviewed conference or journal version
+later becomes available and should be cited instead.
 
 The bundled resolver queries public scholarly metadata APIs and returns:
 

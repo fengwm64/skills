@@ -1,6 +1,6 @@
 ---
 name: paper-citation-resolver
-description: Resolve academic paper citations from a title, DOI, arXiv ID, arXiv URL, preprint URL, or rough paper name. Use when Codex needs to find the best current citation for a research paper, especially to replace an arXiv/preprint citation with the latest peer-reviewed conference or journal version when evidence supports it, and to output BibTeX plus APA, MLA, Chicago, or IEEE-style citations.
+description: Resolve academic paper citations from a verified full title, DOI, arXiv ID, arXiv URL, preprint URL, or rough paper name after first recovering the paper's complete title and identifiers with paper-search or live web search. Use when Codex needs to find the best current citation for a research paper, especially to replace an arXiv/preprint citation with the latest peer-reviewed conference or journal version when evidence supports it, and to output BibTeX plus APA, MLA, Chicago, or IEEE-style citations.
 ---
 
 # Paper Citation Resolver
@@ -13,17 +13,19 @@ evidence is strong.
 
 ## Workflow
 
-1. Run `scripts/resolve_citation.py` with the user's title, DOI, arXiv URL, or
-   arXiv ID.
-2. Prefer the recommended record when it is marked as reviewed and has strong
+1. If the user gives a rough paper name, first recover the complete title and
+   identifiers with `paper-search` or `ai-search` before resolving citations.
+2. Run `scripts/resolve_citation.py` with the verified title, DOI, arXiv URL,
+   or arXiv ID.
+3. Prefer the recommended record when it is marked as reviewed and has strong
    title similarity.
-3. If API results are missing, rate-limited, contradictory, or only return
+4. If API results are missing, rate-limited, contradictory, or only return
    preprint-like records, use agent research as a fallback. Search authoritative
    venues and indexes, then cite the sources used as evidence.
-4. If the final recommendation is still a preprint, state that no stronger
+5. If the final recommendation is still a preprint, state that no stronger
    reviewed record was found from the checked sources.
-5. Include BibTeX first unless the user requested another format.
-6. Show enough evidence for the user to audit the decision: DOI, venue, source,
+6. Include BibTeX first unless the user requested another format.
+7. Show enough evidence for the user to audit the decision: DOI, venue, source,
    title match score, and any API warnings.
 
 When an authoritative venue provides its own BibTeX entry, prefer that official
@@ -74,6 +76,11 @@ Default preference order:
 Do not silently replace a preprint with a weak candidate. If title similarity is
 low, authors are inconsistent, or venue metadata is absent, report the ambiguity
 and include the top candidates.
+
+When the user has only a partial or fuzzy title, do not skip the title recovery
+step. The resolver works best after the canonical title is known, and the
+recorded citation should be matched against that exact title rather than the
+user's first guess.
 
 ## Service Implementations
 
