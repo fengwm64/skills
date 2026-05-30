@@ -26,6 +26,11 @@ evidence is strong.
 6. Show enough evidence for the user to audit the decision: DOI, venue, source,
    title match score, and any API warnings.
 
+When an authoritative venue provides its own BibTeX entry, prefer that official
+BibTeX over generated BibTeX from general metadata APIs. General APIs are useful
+for discovery, but venue BibTeX usually includes canonical citation keys, URL,
+address, month, editors, and field capitalization.
+
 ## Quick Commands
 
 Use Markdown for a human-readable report:
@@ -60,10 +65,11 @@ user asks why a preprint was or was not replaced. Read
 
 Default preference order:
 
-1. Peer-reviewed conference or journal version with DOI and venue metadata.
-2. Publisher/proceedings record with strong title match.
-3. arXiv record containing a DOI or journal reference.
-4. Preprint record when no reviewed version is found.
+1. Official venue/publisher BibTeX for the confirmed reviewed version.
+2. Peer-reviewed conference or journal version with DOI and venue metadata.
+3. Publisher/proceedings record with strong title match.
+4. arXiv record containing a DOI or journal reference.
+5. Preprint record when no reviewed version is found.
 
 Do not silently replace a preprint with a weak candidate. If title similarity is
 low, authors are inconsistent, or venue metadata is absent, report the ambiguity

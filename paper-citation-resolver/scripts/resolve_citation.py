@@ -30,6 +30,7 @@ OPENALEX_API = "https://api.openalex.org/works"
 S2_API = "https://api.semanticscholar.org/graph/v1"
 ARXIV_API = "https://export.arxiv.org/api/query"
 DBLP_API = "https://dblp.org/search/publ/api"
+ACL_ANTHOLOGY_URL = "https://aclanthology.org"
 
 DOI_RE = re.compile(r"\b10\.\d{4,9}/[-._;()/:A-Z0-9]+", re.IGNORECASE)
 ARXIV_RE = re.compile(
@@ -75,6 +76,8 @@ class Candidate:
     preprint: bool = False
     raw_id: str = ""
     evidence: list[str] = field(default_factory=list)
+    official_bibtex: str = ""
+    official_bibtex_source: str = ""
     score: float = 0.0
     similarity: float = 0.0
 
@@ -192,6 +195,12 @@ def http_json(url: str, params: dict[str, Any] | None, headers: dict[str, str], 
 def http_text(url: str, params: dict[str, Any] | None, headers: dict[str, str], timeout: float) -> str:
     if params:
         url += "?" + urllib.parse.urlencode(params, doseq=True)
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        return response.read().decode("utf-8")
+
+
+def fetch_url_text(url: str, headers: dict[str, str], timeout: float) -> str:
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=timeout) as response:
         return response.read().decode("utf-8")
@@ -421,6 +430,36 @@ def s2_to_candidate(item: dict[str, Any]) -> Candidate:
     return candidate
 
 
+def acl_anthology_id(candidate: Candidate) -> str:
+    haystack = " ".join([candidate.doi, candidate.url, candidate.raw_id])
+    doi_match = re.search(r"10\.18653/v1/([A-Za-z]\d{2}-\d{4})", haystack, re.IGNORECASE)
+    if doi_match:
+        return doi_match.group(1).upper()
+    url_match = re.search(r"aclanthology\.org/([A-Za-z]\d{2}-\d{4})/?", haystack, re.IGNORECASE)
+    if url_match:
+        return url_match.group(1).upper()
+    return ""
+
+
+def maybe_attach_official_bibtex(candidate: Candidate, headers: dict[str, str], timeout: float, errors: list[str]) -> None:
+    if candidate.official_bibtex:
+        return
+    acl_id = acl_anthology_id(candidate)
+    if not acl_id:
+        return
+    url = f"{ACL_ANTHOLOGY_URL}/{acl_id}.bib"
+    text = safe_call(errors, "ACL Anthology BibTeX lookup", fetch_url_text, url, headers, timeout)
+    if not text:
+        return
+    text = text.strip()
+    if text.startswith("@"):
+        candidate.official_bibtex = text
+        candidate.official_bibtex_source = url
+        evidence = f"Official BibTeX from ACL Anthology: {url}"
+        if evidence not in candidate.evidence:
+            candidate.evidence.append(evidence)
+
+
 def listify(value: Any) -> list[Any]:
     if value is None:
         return []
@@ -609,7 +648,9 @@ def dedupe_candidates(candidates: list[Candidate]) -> list[Candidate]:
     merged: dict[str, Candidate] = {}
     for candidate in candidates:
         key = ""
-        if candidate.arxiv_id:
+        if candidate.doi and not is_arxiv_doi(candidate.doi):
+            key = "doi:" + candidate.doi
+        elif candidate.arxiv_id:
             key = "arxiv:" + strip_arxiv_version(candidate.arxiv_id).lower()
         elif candidate.doi:
             key = "doi:" + candidate.doi
@@ -643,6 +684,8 @@ def dedupe_candidates(candidates: list[Candidate]) -> list[Candidate]:
         existing.reviewed = existing.reviewed or candidate.reviewed
         existing.preprint = existing.preprint and candidate.preprint
         existing.evidence = sorted(set(existing.evidence + candidate.evidence))
+        existing.official_bibtex = existing.official_bibtex or candidate.official_bibtex
+        existing.official_bibtex_source = existing.official_bibtex_source or candidate.official_bibtex_source
     return list(merged.values())
 
 
@@ -836,6 +879,8 @@ def resolve(query: str, args: argparse.Namespace) -> dict[str, Any]:
 
     if seed_arxiv and recommended and recommended.arxiv_id == "":
         recommended.arxiv_id = seed_arxiv.arxiv_id
+    if recommended:
+        maybe_attach_official_bibtex(recommended, headers, args.timeout, errors)
 
     result = {
         "input": detected,
@@ -872,6 +917,7 @@ def candidate_to_dict(candidate: Candidate | None) -> dict[str, Any] | None:
         "score": candidate.score,
         "title_similarity": candidate.similarity,
         "evidence": candidate.evidence,
+        "official_bibtex_source": candidate.official_bibtex_source,
     }
 
 
@@ -1053,7 +1099,7 @@ def build_citations(candidate: Candidate | None) -> dict[str, str]:
         ieee += f" doi/url: {url}."
 
     return {
-        "bibtex": bibtex_entry(candidate),
+        "bibtex": candidate.official_bibtex or bibtex_entry(candidate),
         "apa": " ".join(apa_parts),
         "mla": normalize_space(mla),
         "chicago": normalize_space(chicago),

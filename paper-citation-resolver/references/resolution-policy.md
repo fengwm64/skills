@@ -6,9 +6,10 @@ conference or journal citation.
 ## Preference Order
 
 1. Peer-reviewed conference or journal version with matching title/authors.
-2. Publisher or proceedings record with DOI and venue metadata.
-3. arXiv record that includes a DOI or journal reference.
-4. arXiv or other preprint record with no reviewed version found.
+2. Official BibTeX from the venue or publisher for that reviewed version.
+3. Publisher or proceedings record with DOI and venue metadata.
+4. arXiv record that includes a DOI or journal reference.
+5. arXiv or other preprint record with no reviewed version found.
 
 ## Evidence That Supports a Reviewed Version
 
@@ -17,6 +18,7 @@ conference or journal citation.
 - Semantic Scholar publication type includes `JournalArticle` or `Conference`.
 - OpenAlex record has a DOI plus a non-repository source or venue.
 - Title similarity is high and at least the first author is consistent.
+- Official venue BibTeX exists for the confirmed paper.
 
 ## Evidence That Should Trigger Caution
 
