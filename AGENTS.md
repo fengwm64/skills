@@ -35,6 +35,9 @@ in the final response.
 
 ## Current Skills
 
+- `ai-search`: queries the hosted Google AI Search2API service at
+  `https://aisearch.102465.xyz` for live web-grounded answers, citations, and
+  current-fact research through `/query` and OpenAI-compatible endpoints.
 - `paper-citation-resolver`: resolves paper titles, DOIs, arXiv identifiers, and
   preprint URLs to the best current citation, prioritizing peer-reviewed
   conference or journal versions over preprints when evidence supports it.

@@ -9,6 +9,11 @@ subdirectory is a complete, self-contained skill.
 .
 ├── README.md
 ├── AGENTS.md
+├── ai-search/
+│   ├── SKILL.md
+│   ├── agents/openai.yaml
+│   ├── references/
+│   └── scripts/
 └── paper-citation-resolver/
     ├── SKILL.md
     ├── agents/openai.yaml
@@ -17,6 +22,20 @@ subdirectory is a complete, self-contained skill.
 ```
 
 ## Available Skills
+
+### `ai-search`
+
+Query the hosted Google AI Search2API service for live web-grounded answers,
+citations, and current-fact research. The skill uses
+`https://aisearch.102465.xyz` by default and includes a no-dependency Python
+client for the `/query` endpoint.
+
+The bundled client supports:
+
+- environment-based bearer token configuration
+- optional instructions and local context files
+- Markdown, text, and JSON output
+- configurable base URL, model, timeout, and user agent
 
 ### `paper-citation-resolver`
 
@@ -55,7 +74,7 @@ or repair the script result before returning the final citation.
 Validate a skill with the local skill creator validator:
 
 ```bash
-python3 /Users/fwm/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./paper-citation-resolver
+python3 /Users/fwm/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./<skill-name>
 ```
 
 Run skill-specific scripts directly from the repository root. Example:

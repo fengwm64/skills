@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Search"
+  short_description: "Search the live web with Google AI results"
+  default_prompt: "Use $ai-search to research this question with live AI search and cite the returned sources."
