@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Citation Resolver"
+  short_description: "Resolve papers to peer-reviewed citations"
+  default_prompt: "Use $paper-citation-resolver to find the peer-reviewed citation and BibTeX for this paper."
