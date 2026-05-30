@@ -27,8 +27,10 @@ Prefer authoritative or field-specific sources before broad web search:
 5. Prefer the proceedings or publisher metadata over a preprint, but keep the
    arXiv ID in notes when it helps disambiguate.
 6. Use official BibTeX from the venue when available. For ACL Anthology, fetch
-   `https://aclanthology.org/<paper-id>.bib`; for PMLR, NeurIPS, OpenReview,
-   ACM, IEEE, and CVF, prefer their exported BibTeX over generated entries.
+   `https://aclanthology.org/<paper-id>.bib`; paper IDs may be old-style
+   (`N19-1272`) or newer structured IDs (`2021.naacl-main.168`). For PMLR,
+   NeurIPS, OpenReview, ACM, IEEE, and CVF, prefer their exported BibTeX over
+   generated entries.
 7. Generate BibTeX from confirmed metadata only when no official BibTeX exists.
    If a DOI is absent, use the venue URL.
 8. Report the checked sources and the reason for the choice.

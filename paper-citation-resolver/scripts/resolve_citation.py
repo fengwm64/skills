@@ -432,12 +432,22 @@ def s2_to_candidate(item: dict[str, Any]) -> Candidate:
 
 def acl_anthology_id(candidate: Candidate) -> str:
     haystack = " ".join([candidate.doi, candidate.url, candidate.raw_id])
-    doi_match = re.search(r"10\.18653/v1/([A-Za-z]\d{2}-\d{4})", haystack, re.IGNORECASE)
+    doi_match = re.search(
+        r"10\.18653/v1/((?:\d{4}\.[A-Za-z0-9-]+\.\d+)|(?:[A-Za-z]\d{2}-\d{4}))",
+        haystack,
+        re.IGNORECASE,
+    )
     if doi_match:
-        return doi_match.group(1).upper()
-    url_match = re.search(r"aclanthology\.org/([A-Za-z]\d{2}-\d{4})/?", haystack, re.IGNORECASE)
+        paper_id = doi_match.group(1)
+        return paper_id.upper() if re.fullmatch(r"[A-Za-z]\d{2}-\d{4}", paper_id) else paper_id
+    url_match = re.search(
+        r"aclanthology\.org/((?:\d{4}\.[A-Za-z0-9-]+\.\d+)|(?:[A-Za-z]\d{2}-\d{4}))/?",
+        haystack,
+        re.IGNORECASE,
+    )
     if url_match:
-        return url_match.group(1).upper()
+        paper_id = url_match.group(1)
+        return paper_id.upper() if re.fullmatch(r"[A-Za-z]\d{2}-\d{4}", paper_id) else paper_id
     return ""
 
 
