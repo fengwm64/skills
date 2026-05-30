@@ -53,6 +53,7 @@ PREPRINT_CROSSREF_TYPES = {"posted-content", "dissertation", "report"}
 REVIEWED_S2_TYPES = {"JournalArticle", "Conference", "Review", "Book", "BookChapter"}
 PREPRINT_S2_TYPES = {"Preprint"}
 PUBLISHERISH_PREPRINT_HINTS = {"posted-content", "preprint", "repository", "report", "dissertation"}
+ACL_JOURNAL_ID_HINTS = {".tacl-", ".cl-", ".lilt-"}
 
 
 @dataclass
@@ -470,6 +471,52 @@ def maybe_attach_official_bibtex(candidate: Candidate, headers: dict[str, str], 
             candidate.evidence.append(evidence)
 
 
+def attach_official_bibtex(candidates: list[Candidate], headers: dict[str, str], timeout: float, errors: list[str]) -> None:
+    for candidate in candidates:
+        maybe_attach_official_bibtex(candidate, headers, timeout, errors)
+
+
+def has_official_bibtex(candidate: Candidate) -> bool:
+    return bool(candidate.official_bibtex and candidate.official_bibtex_source)
+
+
+def acl_record_kind(candidate: Candidate) -> str:
+    acl_id = acl_anthology_id(candidate)
+    if not acl_id:
+        return ""
+    lowered = acl_id.lower()
+    if any(hint in lowered for hint in ACL_JOURNAL_ID_HINTS):
+        return "journal"
+    return "conference"
+
+
+def is_conference_record(candidate: Candidate) -> bool:
+    work_type = (candidate.work_type or "").lower()
+    venue = (candidate.citation_venue() or "").lower()
+    acl_kind = acl_record_kind(candidate)
+    if acl_kind == "conference":
+        return True
+    if "proceedings" in work_type or "conference" in work_type:
+        return True
+    if candidate.work_type == "proceedings-article":
+        return True
+    if candidate.source.startswith("dblp") and candidate.reviewed and "journal" not in work_type:
+        return True
+    if "conference" in venue or "proceedings" in venue:
+        return True
+    return False
+
+
+def is_journal_record(candidate: Candidate) -> bool:
+    work_type = (candidate.work_type or "").lower()
+    acl_kind = acl_record_kind(candidate)
+    if acl_kind == "journal":
+        return True
+    if candidate.work_type in {"journal-article", "article"}:
+        return True
+    return "journal" in work_type
+
+
 def listify(value: Any) -> list[Any]:
     if value is None:
         return []
@@ -747,6 +794,9 @@ def score_candidates(
             score += 12.0
         if candidate.citation_venue():
             score += 8.0
+        if has_official_bibtex(candidate):
+            score += 44.0
+            candidate.evidence.append(f"Official venue BibTeX preferred: {candidate.official_bibtex_source}")
         if candidate.preprint and not candidate.reviewed:
             score -= 18.0
         if candidate.source.startswith("crossref") and candidate.reviewed and strong_title:
@@ -782,6 +832,15 @@ def choose_recommended(candidates: list[Candidate], input_kind: str, anchor_auth
     if input_kind == "doi":
         return candidates[0]
     anchor_authors = anchor_authors or []
+    official = [
+        item
+        for item in candidates
+        if has_official_bibtex(item)
+        and item.similarity >= 0.78
+        and (not anchor_authors or not item.authors or author_overlap_score(item.authors, anchor_authors) > 0)
+    ]
+    if official:
+        return official[0]
     reviewed = [
         item
         for item in candidates
@@ -884,6 +943,7 @@ def resolve(query: str, args: argparse.Namespace) -> dict[str, Any]:
             candidates.extend(query_s2_by_id("arxiv", exact_arxiv.arxiv_id, headers, args.timeout, errors))
 
     candidates = dedupe_candidates(candidates)
+    attach_official_bibtex(candidates, headers, args.timeout, errors)
     candidates = score_candidates(candidates, query_title, detected["kind"], detected["value"], anchor_authors)
     recommended = choose_recommended(candidates, detected["kind"], anchor_authors)
 
@@ -966,9 +1026,9 @@ def citation_key(candidate: Candidate) -> str:
 def bibtex_entry(candidate: Candidate) -> str:
     work_type = (candidate.work_type or "").lower()
     venue = candidate.citation_venue()
-    if candidate.work_type in {"proceedings-article"} or "conference" in work_type or "proceedings" in work_type:
+    if is_conference_record(candidate):
         entry_type = "inproceedings"
-    elif candidate.work_type in {"journal-article", "article"} or "journal" in work_type:
+    elif is_journal_record(candidate):
         entry_type = "article"
     elif candidate.preprint:
         entry_type = "misc"

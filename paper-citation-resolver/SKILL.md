@@ -68,10 +68,18 @@ user asks why a preprint was or was not replaced. Read
 Default preference order:
 
 1. Official venue/publisher BibTeX for the confirmed reviewed version.
-2. Peer-reviewed conference or journal version with DOI and venue metadata.
-3. Publisher/proceedings record with strong title match.
-4. arXiv record containing a DOI or journal reference.
-5. Preprint record when no reviewed version is found.
+2. Field-specific authoritative indexes such as ACL Anthology, DBLP, PMLR,
+   OpenReview, CVF, ACM/IEEE, or the publisher proceedings page.
+3. Peer-reviewed conference or journal version with DOI and venue metadata.
+4. Publisher/proceedings record with strong title match.
+5. arXiv record containing a DOI or journal reference.
+6. Preprint record when no reviewed version is found.
+
+Treat Crossref, OpenAlex, and Semantic Scholar as discovery sources, not as the
+final authority for venue type or BibTeX fields when they conflict with an
+official venue page. In particular, do not let a broad API's generic `article`
+label turn a proceedings paper into `@article`; verify against official BibTeX
+or a field-specific index such as DBLP first.
 
 Do not silently replace a preprint with a weak candidate. If title similarity is
 low, authors are inconsistent, or venue metadata is absent, report the ambiguity

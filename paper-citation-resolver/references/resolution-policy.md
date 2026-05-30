@@ -5,9 +5,12 @@ conference or journal citation.
 
 ## Preference Order
 
-1. Peer-reviewed conference or journal version with matching title/authors.
-2. Official BibTeX from the venue or publisher for that reviewed version.
-3. Publisher or proceedings record with DOI and venue metadata.
+1. Official BibTeX from the authoritative venue or publisher for the confirmed
+   reviewed version.
+2. Peer-reviewed conference or journal version with matching title/authors.
+3. Publisher or proceedings record with DOI and venue metadata, preferring
+   field-specific venue pages and DBLP over broad aggregation metadata when they
+   disagree.
 4. arXiv record that includes a DOI or journal reference.
 5. arXiv or other preprint record with no reviewed version found.
 
@@ -28,6 +31,8 @@ conference or journal citation.
 - Authors are missing or clearly inconsistent with the preprint.
 - A result has a DOI but no recognizable venue/container.
 - Public APIs are rate-limited or disagree with authoritative venue pages.
+- A broad metadata API labels a proceedings paper as a generic `article`; check
+  official venue BibTeX or DBLP before emitting `@article`.
 
 ## Reporting
 
